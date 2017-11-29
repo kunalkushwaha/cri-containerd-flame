@@ -8,7 +8,8 @@ RUN go get github.com/spf13/cobra
 RUN mkdir -p /go/src/github.com/kunalkushwaha && cd /go/src/github.com/kunalkushwaha && git clone -b $POWERTEST_BRANCH $POWERTEST_REPO && cd ctr-powertest && git checkout $POWERTEST_COMMIT
 WORKDIR /go/src/github.com/kunalkushwaha/ctr-powertest
 RUN go build
-ENTRYPOINT ["./ctr-powertest", "stress","-t", "container-create-delete"]
+ENTRYPOINT ["./ctr-powertest","-d", "-p", "cri","-r","cri-containerd","profile"]
+#ENTRYPOINT ["./ctr-powertest", "profile"]
 
 FROM golang:1.9 as c8d
 ENV http_proxy="http://172.19.0.3:18080"

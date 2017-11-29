@@ -22,7 +22,7 @@ run: run/base run/bench run/cri
 .PHONY: torch
 torch: run
 	# TODO: figure out something else than this hacky sleep...
-	echo running && $(MAKE) run/torch
+	sleep 15 && echo running && $(MAKE) run/torch
 
 run/base:
 	mkdir -p run && docker run -d --rm --cidfile=$@ -v /run -v /var/lib/containerd -v /dev/disk:/dev/disk  busybox top
