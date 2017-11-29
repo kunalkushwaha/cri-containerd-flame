@@ -1,14 +1,18 @@
 FROM golang:1.9 as bench
-ARG BUCKETBENCH_REPO=https://github.com/estesp/bucketbench.git
-ARG BUCKETBENCH_COMMIT=HEAD
-ARG BUCKETBENCH_BRANCH=master
-RUN mkdir -p /go/src/github.com/estesp && cd /go/src/github.com/estesp && git clone -b $BUCKETBENCH_BRANCH $BUCKETBENCH_REPO && cd bucketbench && git checkout $BUCKETBENCH_COMMIT
-WORKDIR /go/src/github.com/estesp/bucketbench
+ENV http_proxy="http://172.19.0.3:18080"
+ENV https_proxy="http://172.19.0.3:18080"
+ARG POWERTEST_REPO=https://github.com/kunalkushwaha/ctr-powertest.git
+ARG POWERTEST_COMMIT=HEAD
+ARG POWERTEST_BRANCH=master
+RUN go get github.com/spf13/cobra
+RUN mkdir -p /go/src/github.com/kunalkushwaha && cd /go/src/github.com/kunalkushwaha && git clone -b $POWERTEST_BRANCH $POWERTEST_REPO && cd ctr-powertest && git checkout $POWERTEST_COMMIT
+WORKDIR /go/src/github.com/kunalkushwaha/ctr-powertest
 RUN go build
-COPY bench.yaml /bench.yaml
-ENTRYPOINT ["./bucketbench", "run", "--benchmark=/bench.yaml"]
+ENTRYPOINT ["./ctr-powertest", "stress","-t", "container-create-delete"]
 
 FROM golang:1.9 as c8d
+ENV http_proxy="http://172.19.0.3:18080"
+ENV https_proxy="http://172.19.0.3:18080"
 ARG CONTAINERD_REPO=https://github.com/containerd/containerd.git
 ARG CONTAINERD_BRANCH=master
 ARG CONTAINERD_COMMIT=v1.0.0-beta.3
@@ -21,6 +25,8 @@ RUN mkdir -p /go/src/github.com/containerd/ \
 	&& make BUILDTAGS=no_btrfs && make install
 
 FROM golang:1.9 as cri
+ENV http_proxy="http://172.19.0.3:18080"
+ENV https_proxy="http://172.19.0.3:18080"
 ARG CNI_VERSION=0.6.0
 RUN go get github.com/opencontainers/runc
 RUN mkdir -p /opt/cni/bin && curl -sSLf https://github.com/containernetworking/plugins/releases/download/v${CNI_VERSION}/cni-plugins-amd64-v${CNI_VERSION}.tgz | tar -zx -C /opt/cni/bin
