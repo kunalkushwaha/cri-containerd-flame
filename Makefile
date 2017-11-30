@@ -17,12 +17,12 @@ build/%.txt:
 	mkdir -p build && docker build --target $* --iidfile=$@ $($*_build_args) -t cric8d/$* .
 
 .PHONY: run
-run: run/base run/bench run/cri
+run: run/base run/cri run/bench
 
 .PHONY: torch
 torch: run
 	# TODO: figure out something else than this hacky sleep...
-	sleep 15 && echo running && $(MAKE) run/torch
+	echo running && $(MAKE) run/torch
 
 run/base:
 	mkdir -p run && docker run -d --rm --cidfile=$@ -v /run -v /var/lib/containerd -v /dev/disk:/dev/disk  busybox top
@@ -39,7 +39,7 @@ run/%:  build/c8d.txt build/%.txt run/base
 	mkdir -p run && docker run -d -t --privileged --cidfile=$@ --volumes-from $(shell cat run/base) --net=container:$(shell cat run/base) $(shell cat build/$*.txt)
 
 .PHONY: clean
-clean: clean/cri clean/bench clean/torch clean/base
+clean:  clean/bench clean/cri clean/torch clean/base
 	-rm -rf build/*
 	-rm -rf run/*
 

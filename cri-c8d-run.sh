@@ -8,6 +8,6 @@ handle_exit() {
 }
 
 containerd &
-cri-containerd -v 2 $@
+cri-containerd $@
 
 wait
