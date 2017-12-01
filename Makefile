@@ -1,11 +1,11 @@
 PREFIX ?= "run"
-PROFILE_SECONDS ?= "60"
+PROFILE_SECONDS ?= "120"
 
 .PHONY: all
 all: torch
 
 .PHONY: build
-build: build/c8d.txt build/cri.txt build/bench.txt
+build:  build/cri.txt build/bench.txt
 
 bench.yaml:
 
@@ -17,7 +17,7 @@ build/%.txt:
 	mkdir -p build && docker build --target $* --iidfile=$@ $($*_build_args) -t cric8d/$* .
 
 .PHONY: run
-run: run/base run/bench run/cri
+run: run/base run/cri run/bench 
 
 .PHONY: torch
 torch: run
@@ -25,21 +25,21 @@ torch: run
 	echo running && $(MAKE) run/torch
 
 run/base:
-	mkdir -p run && docker run -d --rm --cidfile=$@ -v /run -v /var/lib/containerd -v /dev/disk:/dev/disk  busybox top
+	mkdir -p run && docker run -d --rm --cidfile=$@ -v /run -v /var/run -v /var/lib/containers/storage -v /dev/disk:/dev/disk  busybox top
 
-run/torch: run/cri run/bench
-	docker run --rm --cidfile=$@ --log-driver=none --net=container:$(shell cat run/cri) uber/go-torch --print -t $(PROFILE_SECONDS) > $(PREFIX)/torch.svg; \
+run/torch: run/bench run/cri 
+	docker run --rm --cidfile=$@ --log-driver=none --net=container:$(shell cat run/cri) uber/go-torch -u http://localhost:6060 --print -t $(PROFILE_SECONDS) > $(PREFIX)/torch.svg; \
 		rm run/torch; \
 		docker logs -f $(shell cat run/bench); \
 		docker rm $(shell cat run/bench); \
 		rm run/bench
 
 .PRECIOUS: run/%
-run/%:  build/c8d.txt build/%.txt run/base
+run/%:  build/%.txt run/base
 	mkdir -p run && docker run -d -t --privileged --cidfile=$@ --volumes-from $(shell cat run/base) --net=container:$(shell cat run/base) $(shell cat build/$*.txt)
 
 .PHONY: clean
-clean: clean/cri clean/bench clean/torch clean/base
+clean: clean/bench clean/cri clean/torch clean/base
 	-rm -rf build/*
 	-rm -rf run/*
 

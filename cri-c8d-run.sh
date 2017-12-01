@@ -3,11 +3,9 @@
 trap handle_exit EXIT
 
 handle_exit() {
-	pkill cri-containerd
-	pkill containerd
+	pkill crio
 }
 
-containerd &
-cri-containerd $@
+crio --profile &
 
 wait
